@@ -9,11 +9,25 @@ module Ruboty
       env :DOCOMO_CHARACTER_ID, "Character ID to be passed as t parameter", optional: true
 
       on(
+        /(?<body>.+?)/,
+        description: "docomo ask api",
+        missing: true,
+        name: "ask",
+      )      
+      on(
         /(?<body>.+)/,
         description: "Talk with you if given message didn't match any other handlers",
         missing: true,
         name: "talk",
       )
+
+      def ask(message)
+        response = client.create_knowledge(message[:body], params)
+        @context = response.body["context"]
+        message.reply(response.body["utt"])
+      rescue Exception => e
+        Ruboty.logger.error(%<Error: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}>)
+      end
 
       def talk(message)
         response = client.create_dialogue(message[:body], params)
